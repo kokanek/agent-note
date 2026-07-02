@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cream-50: #faf6ec;
+  --color-cream-100: #f5eedd;
+  --color-cream-200: #ece2ca;
+  --color-cream-300: #ddd1b3;
+  --color-ink-900: #2e332e;
+  --color-ink-700: #4b514b;
+  --color-ink-500: #7c837b;
+  --color-ink-300: #b0b6ae;
+  --color-sage-50: #eef2eb;
+  --color-sage-100: #e6ece2;
+  --color-sage-200: #d7e0d1;
+  --color-terra-600: #b5541f;
+  --color-terra-100: #f4e0d3;
+  --font-sans:
+    ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+}
+
+body {
+  background-color: var(--color-cream-50);
+  background-image: radial-gradient(var(--color-cream-200) 1px, transparent 1px);
+  background-size: 26px 26px;
+  color: var(--color-ink-900);
+}
+
+/* Markdown view styling (rendered by react-markdown after sanitization). */
+.note-prose {
+  line-height: 1.65;
+  font-size: 0.95rem;
+  color: var(--color-ink-700);
+}
+.note-prose h1,
+.note-prose h2,
+.note-prose h3,
+.note-prose h4 {
+  color: var(--color-ink-900);
+  font-weight: 700;
+  margin: 1.4em 0 0.5em;
+  line-height: 1.25;
+}
+.note-prose h1 { font-size: 1.6rem; margin-top: 0.2em; }
+.note-prose h2 { font-size: 1.25rem; }
+.note-prose h3 { font-size: 1.05rem; }
+.note-prose p { margin: 0.7em 0; }
+.note-prose a { color: var(--color-terra-600); text-decoration: underline; }
+.note-prose ul, .note-prose ol { margin: 0.7em 0; padding-left: 1.4em; }
+.note-prose ul { list-style: disc; }
+.note-prose ol { list-style: decimal; }
+.note-prose li { margin: 0.25em 0; }
+.note-prose blockquote {
+  border-left: 3px solid var(--color-cream-300);
+  padding-left: 1em;
+  color: var(--color-ink-500);
+  margin: 0.9em 0;
+}
+.note-prose code {
+  background: var(--color-cream-100);
+  border: 1px solid var(--color-cream-200);
+  border-radius: 5px;
+  padding: 0.1em 0.35em;
+  font-size: 0.85em;
+}
+.note-prose pre {
+  background: #2e332e;
+  color: #e9eee6;
+  border-radius: 10px;
+  padding: 0.9em 1.1em;
+  overflow-x: auto;
+  margin: 0.9em 0;
+}
+.note-prose pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+.note-prose hr {
+  border: none;
+  border-top: 1px solid var(--color-cream-300);
+  margin: 1.6em 0;
+}
+.note-prose table {
+  border-collapse: collapse;
+  margin: 0.9em 0;
+  font-size: 0.9em;
+}
+.note-prose th,
+.note-prose td {
+  border: 1px solid var(--color-cream-300);
+  padding: 0.4em 0.75em;
+  text-align: left;
+}
+.note-prose th { background: var(--color-cream-100); }
+.note-prose img { max-width: 100%; border-radius: 8px; }
