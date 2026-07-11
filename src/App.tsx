@@ -18,6 +18,7 @@ import { ApiKeyGate } from "./components/ApiKeyGate";
 import { Sidebar } from "./components/Sidebar";
 import { NoteView } from "./components/NoteView";
 import { Editor } from "./components/Editor";
+import { DropZone } from "./components/DropZone";
 
 export default function App() {
   const [key, setKey] = useState<string | null>(getApiKey());
@@ -39,6 +40,7 @@ function Workspace({ onChangeKey }: { onChangeKey: () => void }) {
   const [notes, setNotes] = useState<NoteMeta[]>([]);
   const [note, setNote] = useState<Note | null>(null);
   const [editing, setEditing] = useState(false);
+  const [dropFolder, setDropFolder] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleError = useCallback(
@@ -70,10 +72,18 @@ function Workspace({ onChangeKey }: { onChangeKey: () => void }) {
   async function selectNote(id: string) {
     try {
       setEditing(false);
+      setDropFolder(null);
       setNote(await getNote(id));
     } catch (err) {
       handleError(err);
     }
+  }
+
+  function startDrop(folderId: string) {
+    setNote(null);
+    setEditing(false);
+    setError(null);
+    setDropFolder(folderId);
   }
 
   async function handleCreateFolder(name: string) {
@@ -104,6 +114,7 @@ function Workspace({ onChangeKey }: { onChangeKey: () => void }) {
         content: "---\ntitle: untitled\n---\n\n",
       });
       await refresh();
+      setDropFolder(null);
       setNote(await getNote(meta.id));
       setEditing(true);
     } catch (err) {
@@ -139,6 +150,7 @@ function Workspace({ onChangeKey }: { onChangeKey: () => void }) {
         onSelect={(id) => void selectNote(id)}
         onCreateFolder={handleCreateFolder}
         onCreateNote={handleCreateNote}
+        onDrop={startDrop}
         onDeleteFolder={handleDeleteFolder}
         onChangeKey={onChangeKey}
       />
@@ -156,7 +168,17 @@ function Workspace({ onChangeKey }: { onChangeKey: () => void }) {
           </div>
         )}
 
-        {note ? (
+        {dropFolder ? (
+          <DropZone
+            folderId={dropFolder}
+            folderName={
+              folders.find((f) => f.id === dropFolder)?.name ?? "folder"
+            }
+            onUploaded={() => void refresh()}
+            onOpenNote={(id) => void selectNote(id)}
+            onClose={() => setDropFolder(null)}
+          />
+        ) : note ? (
           <>
             <header className="flex h-14 shrink-0 items-center gap-2 border-b border-cream-200 bg-white px-5">
               <h2 className="truncate text-base font-bold text-ink-900">
