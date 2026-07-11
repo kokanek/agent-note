@@ -19,7 +19,7 @@ export function Sidebar({
   onSelect,
   onCreateFolder,
   onCreateNote,
-  onDrop,
+  onUpload,
   onDeleteFolder,
   onChangeKey,
 }: {
@@ -29,14 +29,13 @@ export function Sidebar({
   onSelect: (id: string) => void;
   onCreateFolder: (name: string) => Promise<void>;
   onCreateNote: (folderId: string) => Promise<void>;
-  onDrop: (folderId: string) => void;
+  onUpload: () => void;
   onDeleteFolder: (id: string) => Promise<void>;
   onChangeKey: () => void;
 }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(loadCollapsed);
   const [addingFolder, setAddingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  const [menuFolder, setMenuFolder] = useState<string | null>(null);
 
   const notesByFolder = useMemo(() => {
     const map = new Map<string, NoteMeta[]>();
@@ -71,7 +70,7 @@ export function Sidebar({
 
   return (
     <aside className="flex h-full w-72 shrink-0 flex-col border-r border-cream-200 bg-cream-100/90">
-      <div className="flex items-center gap-2 px-4 pb-2 pt-4">
+      <div className="flex items-center gap-1 px-4 pb-2 pt-4">
         <h1 className="text-lg font-bold text-ink-900">Notes</h1>
         <button
           onClick={() => setAddingFolder(true)}
@@ -79,6 +78,14 @@ export function Sidebar({
           className="ml-auto rounded-lg px-2 py-1 text-sm font-semibold text-ink-500 hover:bg-cream-200 hover:text-ink-900"
         >
           + folder
+        </button>
+        <button
+          onClick={onUpload}
+          title="Upload HTML file"
+          aria-label="Upload HTML file"
+          className="rounded-lg px-2 py-1 text-lg font-semibold leading-none text-ink-500 hover:bg-cream-200 hover:text-ink-900"
+        >
+          +
         </button>
       </div>
 
@@ -105,7 +112,6 @@ export function Sidebar({
         {folders.map((folder) => {
           const folderNotes = notesByFolder.get(folder.id) ?? [];
           const isOpen = !collapsed.has(folder.id);
-          const menuOpen = menuFolder === folder.id;
           return (
             <section key={folder.id} className="mb-1">
               <div className="group flex items-center gap-1 rounded-lg px-2 py-1.5 hover:bg-cream-200/70">
@@ -125,49 +131,19 @@ export function Sidebar({
                     {folderNotes.length}
                   </span>
                 </button>
-                <div className="relative">
-                  <button
-                    onClick={() => setMenuFolder(menuOpen ? null : folder.id)}
-                    title="Add to this folder"
-                    className={`rounded px-1.5 text-sm text-ink-500 hover:bg-white hover:text-ink-900 ${
-                      menuOpen ? "block" : "hidden group-hover:block"
-                    }`}
-                  >
-                    +
-                  </button>
-                  {menuOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setMenuFolder(null)}
-                      />
-                      <div className="absolute right-0 z-20 mt-1 w-40 overflow-hidden rounded-lg border border-cream-200 bg-white py-1 shadow-lg">
-                        <button
-                          onClick={() => {
-                            setMenuFolder(null);
-                            void onCreateNote(folder.id);
-                          }}
-                          className="block w-full px-3 py-1.5 text-left text-sm text-ink-700 hover:bg-cream-100"
-                        >
-                          New note
-                        </button>
-                        <button
-                          onClick={() => {
-                            setMenuFolder(null);
-                            onDrop(folder.id);
-                          }}
-                          className="block w-full px-3 py-1.5 text-left text-sm text-ink-700 hover:bg-cream-100"
-                        >
-                          Drop HTML…
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
+                <button
+                  onClick={() => void onCreateNote(folder.id)}
+                  title="New note in this folder"
+                  aria-label="New note in this folder"
+                  className="block rounded px-1.5 text-sm text-ink-500 hover:bg-white hover:text-ink-900 md:hidden md:group-hover:block"
+                >
+                  +
+                </button>
                 <button
                   onClick={() => void onDeleteFolder(folder.id)}
                   title="Delete folder"
-                  className="hidden rounded px-1.5 text-sm text-ink-500 hover:bg-white hover:text-red-700 group-hover:block"
+                  aria-label="Delete folder"
+                  className="block rounded px-1.5 text-sm text-ink-500 hover:bg-white hover:text-red-700 md:hidden md:group-hover:block"
                 >
                   ×
                 </button>

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { createNote } from "../api/client";
+import { createNote, type Folder } from "../api/client";
 
 interface Hosted {
   id: string;
@@ -16,30 +16,40 @@ function titleFromFilename(name: string): string {
 
 /**
  * Netlify-Drop-style pane: drop one or more .html files and each becomes an
- * html note in the target folder — "hosted" via the same sandboxed /raw
- * iframe path used for agent-authored artifacts. Purely a client of the
- * existing POST /api/notes endpoint.
+ * html note in the folder picked from the dropdown — "hosted" via the same
+ * sandboxed /raw iframe path used for agent-authored artifacts. Purely a
+ * client of the existing POST /api/notes endpoint.
  */
 export function DropZone({
-  folderId,
-  folderName,
+  folders,
+  defaultFolderId,
   onUploaded,
   onOpenNote,
   onClose,
 }: {
-  folderId: string;
-  folderName: string;
+  folders: Folder[];
+  defaultFolderId?: string;
   onUploaded: () => void;
   onOpenNote: (id: string) => void;
   onClose: () => void;
 }) {
+  const [folderId, setFolderId] = useState<string>(
+    defaultFolderId ?? folders[0]?.id ?? "",
+  );
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [hosted, setHosted] = useState<Hosted[]>([]);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const selectedName = folders.find((f) => f.id === folderId)?.name ?? "";
+  const noFolders = folders.length === 0;
+
   async function ingest(files: FileList | File[]) {
+    if (!folderId) {
+      setError("Pick a folder first.");
+      return;
+    }
     const list = Array.from(files);
     const htmlFiles = list.filter(isHtmlFile);
     const rejected = list.length - htmlFiles.length;
@@ -71,9 +81,7 @@ export function DropZone({
   return (
     <div className="flex h-full flex-col">
       <header className="flex h-14 shrink-0 items-center gap-2 border-b border-cream-200 bg-white px-5">
-        <h2 className="truncate text-base font-bold text-ink-900">
-          Drop HTML into <span className="text-terra-600">{folderName}</span>
-        </h2>
+        <h2 className="truncate text-base font-bold text-ink-900">Upload HTML</h2>
         <button
           onClick={onClose}
           className="ml-auto rounded-lg px-3 py-1.5 text-sm font-medium text-ink-500 hover:bg-cream-100 hover:text-ink-900"
@@ -82,49 +90,73 @@ export function DropZone({
         </button>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-8">
-        <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragging(true);
-          }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragging(false);
-            void ingest(e.dataTransfer.files);
-          }}
-          onClick={() => inputRef.current?.click()}
-          className={`flex min-h-64 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-colors ${
-            dragging
-              ? "border-terra-600 bg-terra-100/50"
-              : "border-cream-300 bg-cream-50 hover:border-ink-300 hover:bg-cream-100"
-          }`}
+      <div className="flex shrink-0 items-center gap-2 border-b border-cream-200 bg-cream-50/60 px-5 py-2 text-sm">
+        <label htmlFor="drop-folder" className="text-ink-500">
+          Folder
+        </label>
+        <select
+          id="drop-folder"
+          value={folderId}
+          onChange={(e) => setFolderId(e.target.value)}
+          disabled={noFolders}
+          className="rounded-lg border border-cream-300 bg-white px-2 py-1 text-sm text-ink-900 outline-none disabled:opacity-50"
         >
-          <div className="mb-3 text-4xl">📄</div>
-          <p className="text-base font-semibold text-ink-900">
-            {busy ? "Uploading…" : "Drag & drop an HTML file"}
-          </p>
-          <p className="mt-1 text-sm text-ink-500">
-            or click to choose · it will be hosted under{" "}
-            <span className="font-medium">{folderName}</span>
-          </p>
-          <input
-            ref={inputRef}
-            type="file"
-            accept=".html,.htm,text/html"
-            multiple
-            className="hidden"
-            onChange={(e) => {
-              if (e.target.files) void ingest(e.target.files);
-              e.target.value = "";
-            }}
-          />
-        </div>
+          {noFolders && <option value="">No folders</option>}
+          {folders.map((f) => (
+            <option key={f.id} value={f.id}>
+              {f.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        {error && (
-          <p className="mt-4 text-sm text-amber-700">{error}</p>
+      <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-8">
+        {noFolders ? (
+          <p className="text-sm text-ink-500">
+            Create a folder first, then upload into it.
+          </p>
+        ) : (
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              void ingest(e.dataTransfer.files);
+            }}
+            onClick={() => inputRef.current?.click()}
+            className={`flex min-h-52 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-10 text-center transition-colors sm:min-h-64 sm:py-12 ${
+              dragging
+                ? "border-terra-600 bg-terra-100/50"
+                : "border-cream-300 bg-cream-50 hover:border-ink-300 hover:bg-cream-100"
+            }`}
+          >
+            <div className="mb-3 text-4xl">📄</div>
+            <p className="text-base font-semibold text-ink-900">
+              {busy ? "Uploading…" : "Drag & drop an HTML file"}
+            </p>
+            <p className="mt-1 text-sm text-ink-500">
+              or tap to choose · hosted under{" "}
+              <span className="font-medium">{selectedName}</span>
+            </p>
+            <input
+              ref={inputRef}
+              type="file"
+              accept=".html,.htm,text/html"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files) void ingest(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </div>
         )}
+
+        {error && <p className="mt-4 text-sm text-amber-700">{error}</p>}
 
         {hosted.length > 0 && (
           <div className="mt-6">
