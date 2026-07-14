@@ -18,6 +18,7 @@ import { ApiKeyGate } from "./components/ApiKeyGate";
 import { Sidebar } from "./components/Sidebar";
 import { NoteView } from "./components/NoteView";
 import { Editor } from "./components/Editor";
+import { DropZone } from "./components/DropZone";
 
 export default function App() {
   const [key, setKey] = useState<string | null>(getApiKey());
@@ -39,6 +40,8 @@ function Workspace({ onChangeKey }: { onChangeKey: () => void }) {
   const [notes, setNotes] = useState<NoteMeta[]>([]);
   const [note, setNote] = useState<Note | null>(null);
   const [editing, setEditing] = useState(false);
+  const [dropOpen, setDropOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleError = useCallback(
@@ -68,12 +71,22 @@ function Workspace({ onChangeKey }: { onChangeKey: () => void }) {
   }, [refresh]);
 
   async function selectNote(id: string) {
+    setMobileNavOpen(false);
     try {
       setEditing(false);
+      setDropOpen(false);
       setNote(await getNote(id));
     } catch (err) {
       handleError(err);
     }
+  }
+
+  function openUpload() {
+    setNote(null);
+    setEditing(false);
+    setError(null);
+    setDropOpen(true);
+    setMobileNavOpen(false);
   }
 
   async function handleCreateFolder(name: string) {
@@ -104,6 +117,8 @@ function Workspace({ onChangeKey }: { onChangeKey: () => void }) {
         content: "---\ntitle: untitled\n---\n\n",
       });
       await refresh();
+      setDropOpen(false);
+      setMobileNavOpen(false);
       setNote(await getNote(meta.id));
       setEditing(true);
     } catch (err) {
@@ -131,19 +146,52 @@ function Workspace({ onChangeKey }: { onChangeKey: () => void }) {
   }
 
   return (
-    <div className="flex h-screen">
-      <Sidebar
-        folders={folders}
-        notes={notes}
-        selectedId={note?.id ?? null}
-        onSelect={(id) => void selectNote(id)}
-        onCreateFolder={handleCreateFolder}
-        onCreateNote={handleCreateNote}
-        onDeleteFolder={handleDeleteFolder}
-        onChangeKey={onChangeKey}
-      />
+    <div className="flex h-screen overflow-hidden">
+      {/* Sidebar: static column on desktop, slide-in drawer on mobile */}
+      <div
+        className={`fixed inset-y-0 left-0 z-40 w-72 transform transition-transform duration-200 md:static md:z-auto md:translate-x-0 ${
+          mobileNavOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <Sidebar
+          folders={folders}
+          notes={notes}
+          selectedId={note?.id ?? null}
+          onSelect={(id) => void selectNote(id)}
+          onCreateFolder={handleCreateFolder}
+          onCreateNote={handleCreateNote}
+          onUpload={openUpload}
+          onDeleteFolder={handleDeleteFolder}
+          onChangeKey={onChangeKey}
+        />
+      </div>
+      {mobileNavOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/30 md:hidden"
+          onClick={() => setMobileNavOpen(false)}
+          aria-hidden
+        />
+      )}
 
       <main className="flex min-w-0 flex-1 flex-col bg-white/60">
+        {/* Mobile top bar with the drawer toggle */}
+        <div className="flex items-center gap-2 border-b border-cream-200 bg-white px-3 py-2 md:hidden">
+          <button
+            onClick={() => setMobileNavOpen(true)}
+            aria-label="Open menu"
+            className="rounded-lg px-2 py-1 text-xl leading-none text-ink-700 hover:bg-cream-100"
+          >
+            ☰
+          </button>
+          <span className="truncate text-sm font-semibold text-ink-900">
+            {note
+              ? `${note.title}.${note.format}`
+              : dropOpen
+                ? "Upload HTML"
+                : "Notes"}
+          </span>
+        </div>
+
         {error && (
           <div className="flex items-center border-b border-red-300 bg-red-50 px-4 py-2 text-sm text-red-800">
             <span>{error}</span>
@@ -156,7 +204,14 @@ function Workspace({ onChangeKey }: { onChangeKey: () => void }) {
           </div>
         )}
 
-        {note ? (
+        {dropOpen ? (
+          <DropZone
+            folders={folders}
+            onUploaded={() => void refresh()}
+            onOpenNote={(id) => void selectNote(id)}
+            onClose={() => setDropOpen(false)}
+          />
+        ) : note ? (
           <>
             <header className="flex h-14 shrink-0 items-center gap-2 border-b border-cream-200 bg-white px-5">
               <h2 className="truncate text-base font-bold text-ink-900">

@@ -19,6 +19,7 @@ export function Sidebar({
   onSelect,
   onCreateFolder,
   onCreateNote,
+  onUpload,
   onDeleteFolder,
   onChangeKey,
 }: {
@@ -28,6 +29,7 @@ export function Sidebar({
   onSelect: (id: string) => void;
   onCreateFolder: (name: string) => Promise<void>;
   onCreateNote: (folderId: string) => Promise<void>;
+  onUpload: () => void;
   onDeleteFolder: (id: string) => Promise<void>;
   onChangeKey: () => void;
 }) {
@@ -68,7 +70,7 @@ export function Sidebar({
 
   return (
     <aside className="flex h-full w-72 shrink-0 flex-col border-r border-cream-200 bg-cream-100/90">
-      <div className="flex items-center gap-2 px-4 pb-2 pt-4">
+      <div className="flex items-center gap-1 px-4 pb-2 pt-4">
         <h1 className="text-lg font-bold text-ink-900">Notes</h1>
         <button
           onClick={() => setAddingFolder(true)}
@@ -76,6 +78,14 @@ export function Sidebar({
           className="ml-auto rounded-lg px-2 py-1 text-sm font-semibold text-ink-500 hover:bg-cream-200 hover:text-ink-900"
         >
           + folder
+        </button>
+        <button
+          onClick={onUpload}
+          title="Upload HTML file"
+          aria-label="Upload HTML file"
+          className="rounded-lg px-2 py-1 text-lg font-semibold leading-none text-ink-500 hover:bg-cream-200 hover:text-ink-900"
+        >
+          +
         </button>
       </div>
 
@@ -124,14 +134,16 @@ export function Sidebar({
                 <button
                   onClick={() => void onCreateNote(folder.id)}
                   title="New note in this folder"
-                  className="hidden rounded px-1.5 text-sm text-ink-500 hover:bg-white hover:text-ink-900 group-hover:block"
+                  aria-label="New note in this folder"
+                  className="block rounded px-1.5 text-sm text-ink-500 hover:bg-white hover:text-ink-900 md:hidden md:group-hover:block"
                 >
                   +
                 </button>
                 <button
                   onClick={() => void onDeleteFolder(folder.id)}
                   title="Delete folder"
-                  className="hidden rounded px-1.5 text-sm text-ink-500 hover:bg-white hover:text-red-700 group-hover:block"
+                  aria-label="Delete folder"
+                  className="block rounded px-1.5 text-sm text-ink-500 hover:bg-white hover:text-red-700 md:hidden md:group-hover:block"
                 >
                   ×
                 </button>
