@@ -1,7 +1,7 @@
 # Agent Notes
 
 A personal, single-user notes app in the style of Apple Notes, where **notes
-are files** and **an agent is a first-class author**.
+are files** and **an agent is a first-class author** working on files.
 
 - Each note is a `.md` file (Markdown + frontmatter, with rich blocks via
   directives) or a `.html` file (a self-contained, possibly interactive
