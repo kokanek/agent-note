@@ -8,7 +8,7 @@
     "not_found_handling": "single-page-application",
     // SPA mode serves index.html for unmatched navigations without invoking
     // the worker — these routes must always reach the worker instead.
-    "run_worker_first": ["/api/*", "/raw/*"]
+    "run_worker_first": ["/api/*", "/raw/*"],
   },
   "d1_databases": [
     {
@@ -16,17 +16,28 @@
       "database_name": "notes-db",
       // Replace with the real id from `wrangler d1 create notes-db` before deploying.
       // Any value works for local dev.
-      "database_id": "00000000-0000-0000-0000-000000000000",
-      "migrations_dir": "migrations"
-    }
+      "database_id": "c10f2165-5e8f-4d93-887f-a340eca85232",
+      "migrations_dir": "migrations",
+    },
+    {
+      "binding": "notes_db",
+      "database_name": "notes-db",
+      "database_id": "c10f2165-5e8f-4d93-887f-a340eca85232",
+      "remote": true,
+    },
   ],
   "r2_buckets": [
     {
       "binding": "BUCKET",
-      "bucket_name": "agent-note-bodies"
-    }
+      "bucket_name": "agent-note-bodies",
+    },
+    {
+      "bucket_name": "agent-note-bodies",
+      "binding": "agent_note_bodies",
+      "remote": true,
+    },
   ],
   "observability": {
-    "enabled": true
-  }
+    "enabled": true,
+  },
 }
